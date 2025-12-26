@@ -35,6 +35,14 @@ app.post("/callback", line.middleware(lineConfig), async (req, res) => {
           type: "text",
           text: replyText,
         });
+      } else if (text === "ข้อมูลโดยรวม") {
+        const waterText = await getWaterLevel();
+        const floodText = await getFloodReports();
+        const combinedText = `💦 ข้อมูลโดยรวม:\n\n${waterText}\n\n${floodText}`;
+        await client.replyMessage(event.replyToken, {
+          type: "text",
+          text: combinedText,
+        });
       }
     }
   }
