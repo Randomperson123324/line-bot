@@ -37,7 +37,7 @@ app.post("/callback", line.middleware(lineConfig), async (req, res) => {
 
 async function getWaterLevel() {
   const { data, error } = await supabase
-    .from("water_level")
+    .from("water_readings")
     .select("level, created_at")
     .order("created_at", { ascending: false })
     .limit(1)
