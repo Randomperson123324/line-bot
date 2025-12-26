@@ -23,7 +23,7 @@ app.post("/callback", line.middleware(lineConfig), async (req, res) => {
     if (event.type === "message" && event.message.type === "text") {
       const text = event.message.text.trim();
 
-      if (text === "ระดับน้ำปัจจุบัน") {
+      if (text === "ระดับน้ำล่าสุด") {
         const replyText = await getCurrentWaterLevel();
         await client.replyMessage(event.replyToken, {
           type: "text",
@@ -82,7 +82,7 @@ async function getCurrentWaterLevel() {
   });
   const hoursAgo = Math.floor((new Date() - new Date(latest.created_at)) / 1000 / 3600);
 
-  return `💧 ระดับน้ำปัจจุบัน: ${latest.level} ซม.\n📈 แนวโน้ม: ${trendArrow} (${rate} ซม./ชม.)\n🕒 เวลา: ${timestampFull} (${hoursAgo} ชั่วโมงที่แล้ว)`;
+  return `💧 ระดับน้ำล่าสุด: ${latest.level} ซม.\n📈 แนวโน้ม: ${trendArrow} (${rate} ซม./ชม.)\n🕒 เวลา: ${timestampFull} (${hoursAgo} ชั่วโมงที่แล้ว)`;
 }
 
 // Historical water readings (last 20)
