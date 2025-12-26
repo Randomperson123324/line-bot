@@ -29,7 +29,7 @@ app.post("/callback", line.middleware(lineConfig), async (req, res) => {
           type: "text",
           text: replyText,
         });
-      } else if (text === "ข้อมูลน้ำในอดีต") {
+      } else if (text === "ระดับน้ำในอดีต") {
         const replyText = await getHistoricalWaterLevels();
         await client.replyMessage(event.replyToken, {
           type: "text",
@@ -44,7 +44,7 @@ app.post("/callback", line.middleware(lineConfig), async (req, res) => {
       } else if (text === "ข้อมูลโดยรวม") {
         const currentText = await getCurrentWaterLevel();
         const floodText = await getFloodReports();
-        const combinedText = `💦 ข้อมูลโดยรวม:\n\n${currentText}\n\n${floodText}`;
+        const combinedText = `ข้อมูลโดยรวม:\n\n${currentText}\n\n${floodText}`;
         await client.replyMessage(event.replyToken, {
           type: "text",
           text: combinedText,
