@@ -23,8 +23,14 @@ app.post("/callback", line.middleware(lineConfig), async (req, res) => {
     if (event.type === "message" && event.message.type === "text") {
       const text = event.message.text.trim();
 
-      if (text === "ระดับน้ำ") {
-        const replyText = await getWaterLevel();
+      if (text === "ระดับน้ำปัจจุบัน") {
+        const replyText = await getCurrentWaterLevel();
+        await client.replyMessage(event.replyToken, {
+          type: "text",
+          text: replyText,
+        });
+      } else if (text === "ข้อมูลน้ำในอดีต") {
+        const replyText = await getHistoricalWaterLevels();
         await client.replyMessage(event.replyToken, {
           type: "text",
           text: replyText,
@@ -36,9 +42,9 @@ app.post("/callback", line.middleware(lineConfig), async (req, res) => {
           text: replyText,
         });
       } else if (text === "ข้อมูลโดยรวม") {
-        const waterText = await getWaterLevel();
+        const currentText = await getCurrentWaterLevel();
         const floodText = await getFloodReports();
-        const combinedText = `💦 ข้อมูลโดยรวม:\n\n${waterText}\n\n${floodText}`;
+        const combinedText = `💦 ข้อมูลโดยรวม:\n\n${currentText}\n\n${floodText}`;
         await client.replyMessage(event.replyToken, {
           type: "text",
           text: combinedText,
@@ -49,7 +55,8 @@ app.post("/callback", line.middleware(lineConfig), async (req, res) => {
   res.sendStatus(200);
 });
 
-async function getWaterLevel() {
+// Current water level (last 5 readings for trend)
+async function getCurrentWaterLevel() {
   const { data, error } = await supabase
     .from("water_readings")
     .select("level, created_at")
@@ -73,12 +80,36 @@ async function getWaterLevel() {
     timeZone: "Asia/Bangkok",
     hour12: false,
   });
-
   const hoursAgo = Math.floor((new Date() - new Date(latest.created_at)) / 1000 / 3600);
 
   return `💧 ระดับน้ำปัจจุบัน: ${latest.level} ซม.\n📈 แนวโน้ม: ${trendArrow} (${rate} ซม./ชม.)\n🕒 เวลา: ${timestampFull} (${hoursAgo} ชั่วโมงที่แล้ว)`;
 }
 
+// Historical water readings (last 20)
+async function getHistoricalWaterLevels() {
+  const { data, error } = await supabase
+    .from("water_readings")
+    .select("level, created_at")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error || !data || data.length === 0) {
+    return "ไม่พบข้อมูลน้ำย้อนหลัง";
+  }
+
+  const now = new Date();
+
+  return data
+    .map((r, idx) => {
+      const ts = new Date(r.created_at);
+      const timestampFull = ts.toLocaleString("th-TH", { timeZone: "Asia/Bangkok", hour12: false });
+      const hoursAgo = Math.floor((now - ts) / 1000 / 3600);
+      return `${idx + 1}. 💧 ${r.level} ซม. - ${timestampFull} (${hoursAgo} ชั่วโมงที่แล้ว)`;
+    })
+    .join("\n");
+}
+
+// Flood reports (last 24h)
 async function getFloodReports() {
   const now = new Date();
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -96,10 +127,7 @@ async function getFloodReports() {
   return data
     .map((r) => {
       const created = new Date(r.created_at);
-      const timestampFull = created.toLocaleString("th-TH", {
-        timeZone: "Asia/Bangkok",
-        hour12: false,
-      });
+      const timestampFull = created.toLocaleString("th-TH", { timeZone: "Asia/Bangkok", hour12: false });
       const hoursAgo = Math.floor((now - created) / 1000 / 3600);
       return `🏘️ ${r.area_name}\n⚠️ ความรุนแรง: ${r.severity}\n📝 รายละเอียด: ${r.description}\n🕒 เวลา: ${timestampFull} (${hoursAgo} ชั่วโมงที่แล้ว)`;
     })
