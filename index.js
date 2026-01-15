@@ -21,12 +21,13 @@ const LEVEL_WARNING = 50;
 const LEVEL_DANGER = 100;
 
 // Image Assets (GitHub Host)
-// Replace 'YOUR_USER/YOUR_REPO' with actual path when deploying
 const GITHUB_IMAGE_BASE = "https://raw.githubusercontent.com/Randomperson123324/line-bot/main/public/";
+
 const IMG_NORMAL = GITHUB_IMAGE_BASE + "normal.png";
 const IMG_WARNING = GITHUB_IMAGE_BASE + "warning.png";
 const IMG_DANGER = GITHUB_IMAGE_BASE + "danger.png";
-const IMG_DEFAULT = GITHUB_IMAGE_BASE + "default.png";
+const IMG_HISTORY = GITHUB_IMAGE_BASE + "history.png";
+const IMG_FLOOD = GITHUB_IMAGE_BASE + "flood.png";
 
 const client = new line.Client(lineConfig);
 
@@ -111,7 +112,7 @@ function createCurrentLevelFlex(data) {
   const deltaTime = (new Date(latest.created_at) - new Date(oldest.created_at)) / 1000 / 3600;
   const rate = deltaTime > 0 ? (deltaLevel / deltaTime).toFixed(2) : 0;
   const trendArrow = deltaLevel > 0 ? "⬆️ สูงขึ้น" : deltaLevel < 0 ? "⬇️ ลดลง" : "➡️ คงที่";
-  
+
   const timestampFull = new Date(latest.created_at).toLocaleString("th-TH", {
     timeZone: "Asia/Bangkok",
     hour12: false,
@@ -245,26 +246,26 @@ function createHistoryFlex(data) {
 
   const bubbles = chunks.map((chunk, groupIdx) => {
     const listItems = chunk.map((r, i) => {
-        const ts = new Date(r.created_at).toLocaleString("th-TH", {
-             timeZone: "Asia/Bangkok", hour12: false, month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
-        });
-        return {
-            type: "box",
-            layout: "horizontal",
-            contents: [
-                { type: "text", text: `${i + 1 + (groupIdx * chunkSize)}.`, size: "sm", color: "#555555", flex: 1 },
-                { type: "text", text: `${r.level}cm`, size: "sm", weight: "bold", color: "#111111", flex: 2 },
-                { type: "text", text: ts, size: "xs", color: "#aaaaaa", flex: 4, align: "end" }
-            ],
-            margin: "sm"
-        };
+      const ts = new Date(r.created_at).toLocaleString("th-TH", {
+        timeZone: "Asia/Bangkok", hour12: false, month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+      });
+      return {
+        type: "box",
+        layout: "horizontal",
+        contents: [
+          { type: "text", text: `${i + 1 + (groupIdx * chunkSize)}.`, size: "sm", color: "#555555", flex: 1 },
+          { type: "text", text: `${r.level}cm`, size: "sm", weight: "bold", color: "#111111", flex: 2 },
+          { type: "text", text: ts, size: "xs", color: "#aaaaaa", flex: 4, align: "end" }
+        ],
+        margin: "sm"
+      };
     });
 
     return {
       type: "bubble",
       hero: {
         type: "image",
-        url: IMG_DEFAULT,
+        url: IMG_HISTORY,
         size: "full",
         aspectRatio: "20:13",
         aspectMode: "cover"
@@ -273,9 +274,9 @@ function createHistoryFlex(data) {
         type: "box",
         layout: "vertical",
         contents: [
-            { type: "text", text: `ประวัติระดับน้ำ (หน้า ${groupIdx+1})`, weight: "bold", size: "md" },
-            { type: "separator", margin: "md" },
-            { type: "box", layout: "vertical", margin: "md", contents: listItems }
+          { type: "text", text: `ประวัติระดับน้ำ (หน้า ${groupIdx + 1})`, weight: "bold", size: "md" },
+          { type: "separator", margin: "md" },
+          { type: "box", layout: "vertical", margin: "md", contents: listItems }
         ]
       }
     };
@@ -294,11 +295,11 @@ function createFloodFlex(data) {
     return {
       type: "bubble",
       hero: {
-         type: "image",
-         url: IMG_DEFAULT,
-         size: "full",
-         aspectRatio: "20:13",
-         aspectMode: "cover"
+        type: "image",
+        url: IMG_FLOOD,
+        size: "full",
+        aspectRatio: "20:13",
+        aspectMode: "cover"
       },
       body: {
         type: "box",
@@ -318,31 +319,31 @@ function createFloodFlex(data) {
 }
 
 function createOverallFlex(levelData, floodData) {
-    // Combine contents of Current Level (Bubble) + Flood Reports (Carousel Bubbles)
-    const contents = [];
+  // Combine contents of Current Level (Bubble) + Flood Reports (Carousel Bubbles)
+  const contents = [];
 
-    // 1. Current Level Bubble
-    const levelFlex = createCurrentLevelFlex(levelData);
-    // If it returned a text message (error), we skip or handle?
-    // Let's assume valid bubble for carousel if possible.
-    if (levelFlex.contents && levelFlex.contents.type === 'bubble') {
-        contents.push(levelFlex.contents);
-    }
+  // 1. Current Level Bubble
+  const levelFlex = createCurrentLevelFlex(levelData);
+  // If it returned a text message (error), we skip or handle?
+  // Let's assume valid bubble for carousel if possible.
+  if (levelFlex.contents && levelFlex.contents.type === 'bubble') {
+    contents.push(levelFlex.contents);
+  }
 
-    // 2. Flood Bubbles
-    const floodFlex = createFloodFlex(floodData);
-    if (floodFlex.contents && floodFlex.contents.type === 'carousel') {
-        contents.push(...floodFlex.contents.contents);
-    } else if (floodFlex.contents && floodFlex.contents.type === 'bubble') { 
-        // Single bubble case (if logic changed)
-        contents.push(floodFlex.contents);
-    }
+  // 2. Flood Bubbles
+  const floodFlex = createFloodFlex(floodData);
+  if (floodFlex.contents && floodFlex.contents.type === 'carousel') {
+    contents.push(...floodFlex.contents.contents);
+  } else if (floodFlex.contents && floodFlex.contents.type === 'bubble') {
+    // Single bubble case (if logic changed)
+    contents.push(floodFlex.contents);
+  }
 
-    if (contents.length === 0) {
-        return { type: "text", text: "ไม่พบข้อมูลโดยรวม" };
-    }
+  if (contents.length === 0) {
+    return { type: "text", text: "ไม่พบข้อมูลโดยรวม" };
+  }
 
-    return { type: "flex", altText: "ข้อมูลโดยรวม", contents: { type: "carousel", contents: contents } };
+  return { type: "flex", altText: "ข้อมูลโดยรวม", contents: { type: "carousel", contents: contents } };
 }
 
 
