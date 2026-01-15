@@ -23,32 +23,24 @@ app.post("/callback", line.middleware(lineConfig), async (req, res) => {
     if (event.type === "message" && event.message.type === "text") {
       const text = event.message.text.trim();
 
-      if (text === "ระดับน้ำล่าสุด") {
-        const replyText = await getCurrentWaterLevel();
-        await client.replyMessage(event.replyToken, {
-          type: "text",
-          text: replyText,
-        });
+if (text === "ระดับน้ำล่าสุด") {
+  const replyFlex = await getCurrentWaterLevelFlex();
+  await client.replyMessage(event.replyToken, replyFlex);
+
       } else if (text === "ระดับน้ำในอดีต") {
         const replyText = await getHistoricalWaterLevels();
-        await client.replyMessage(event.replyToken, {
-          type: "text",
-          text: replyText,
-        });
+        await client.replyMessage(event.replyToken, replyFlex);
+        
       } else if (text === "รายงานน้ำท่วม") {
         const replyText = await getFloodReports();
-        await client.replyMessage(event.replyToken, {
-          type: "text",
-          text: replyText,
-        });
+        await client.replyMessage(event.replyToken, replyFlex);
+
       } else if (text === "ข้อมูลโดยรวม") {
         const currentText = await getCurrentWaterLevel();
         const floodText = await getFloodReports();
         const combinedText = `ข้อมูลโดยรวม:\n\n${currentText}\n\n${floodText}`;
-        await client.replyMessage(event.replyToken, {
-          type: "text",
-          text: combinedText,
-        });
+        await client.replyMessage(event.replyToken, replyFlex);
+
       }
     }
   }
@@ -56,7 +48,7 @@ app.post("/callback", line.middleware(lineConfig), async (req, res) => {
 });
 
 // Current water level (last 5 readings for trend)
-async function getCurrentWaterLevel() {
+async function getCurrentWaterLevelFlex() { //flex messages
   const { data, error } = await supabase
     .from("water_readings")
     .select("level, created_at")
@@ -64,26 +56,85 @@ async function getCurrentWaterLevel() {
     .limit(5);
 
   if (error || !data || data.length === 0) {
-    return "ไม่สามารถดึงข้อมูลระดับน้ำได้";
+    return {
+      type: "text",
+      text: "ไม่สามารถดึงข้อมูลระดับน้ำได้",
+    };
   }
 
   const latest = data[0];
   const oldest = data[data.length - 1];
 
-  const deltaLevel = latest.level - oldest.level; // cm
-  const deltaTime = (new Date(latest.created_at) - new Date(oldest.created_at)) / 1000 / 3600; // hours
-  const rate = deltaTime > 0 ? (deltaLevel / deltaTime).toFixed(2) : 0;
+  const deltaLevel = latest.level - oldest.level;
+  const deltaTime =
+    (new Date(latest.created_at) - new Date(oldest.created_at)) /
+    1000 /
+    3600;
 
-  const trendArrow = deltaLevel > 0 ? "⬆️ สูงขึ้น" : deltaLevel < 0 ? "⬇️ ลดลง" : "➡️ คงที่";
+  const rate = deltaTime > 0 ? (deltaLevel / deltaTime).toFixed(2) : "0";
+  const trend =
+    deltaLevel > 0 ? "⬆️ สูงขึ้น" : deltaLevel < 0 ? "⬇️ ลดลง" : "➡️ คงที่";
 
-  const timestampFull = new Date(latest.created_at).toLocaleString("th-TH", {
+  const timestamp = new Date(latest.created_at).toLocaleString("th-TH", {
     timeZone: "Asia/Bangkok",
     hour12: false,
   });
-  const hoursAgo = Math.floor((new Date() - new Date(latest.created_at)) / 1000 / 3600);
 
-  return `💧 ระดับน้ำล่าสุด: ${latest.level} ซม.\n📈 แนวโน้ม: ${trendArrow} (${rate} ซม./ชม.)\n🕒 เวลา: ${timestampFull} (${hoursAgo} ชั่วโมงที่แล้ว)`;
+  return {
+    type: "flex",
+    altText: "ระดับน้ำล่าสุด",
+    contents: {
+      type: "bubble",
+      size: "mega",
+      body: {
+        type: "box",
+        layout: "vertical",
+        spacing: "md",
+        contents: [
+          {
+            type: "text",
+            text: "💧 ระดับน้ำล่าสุด",
+            weight: "bold",
+            size: "xl",
+          },
+          {
+            type: "box",
+            layout: "baseline",
+            contents: [
+              { type: "text", text: "ระดับน้ำ", size: "sm", color: "#555555" },
+              {
+                type: "text",
+                text: `${latest.level} ซม.`,
+                weight: "bold",
+                margin: "md",
+              },
+            ],
+          },
+          {
+            type: "box",
+            layout: "baseline",
+            contents: [
+              { type: "text", text: "แนวโน้ม", size: "sm", color: "#555555" },
+              {
+                type: "text",
+                text: `${trend} (${rate} ซม./ชม.)`,
+                margin: "md",
+              },
+            ],
+          },
+          {
+            type: "text",
+            text: `🕒 ${timestamp}`,
+            size: "sm",
+            color: "#888888",
+            wrap: true,
+          },
+        ],
+      },
+    },
+  };
 }
+
 
 // Historical water readings (last 20)
 async function getHistoricalWaterLevels() {
