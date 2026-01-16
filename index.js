@@ -21,7 +21,7 @@ const LEVEL_WARNING = 50;
 const LEVEL_DANGER = 100;
 
 // Image Assets (GitHub Host)
-const GITHUB_IMAGE_BASE = "https://raw.githubusercontent.com/Randomperson123324/line-bot/main/public/";
+const GITHUB_IMAGE_BASE = "https://raw.githubusercontent.com/Randomperson123324/line-bot/main/public/alert.png";
 
 const IMG_NORMAL = GITHUB_IMAGE_BASE + "normal.png";
 const IMG_WARNING = GITHUB_IMAGE_BASE + "warning.png";
