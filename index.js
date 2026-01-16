@@ -43,7 +43,7 @@ app.post("/callback", line.middleware(lineConfig), async (req, res) => {
           await client.replyMessage(event.replyToken, flexMsg);
 
         } else if (text === "ระดับน้ำในอดีต") {
-          const rawData = await fetchHistoricalReads(20);
+          const rawData = await fetchHistoricalReads(50);
           const flexMsg = createHistoryFlex(rawData);
           await client.replyMessage(event.replyToken, flexMsg);
 
@@ -281,6 +281,44 @@ function createHistoryFlex(data) {
         ]
       }
     };
+  });
+
+  // Add "See More" bubble
+  bubbles.push({
+    type: "bubble",
+    hero: {
+      type: "image",
+      url: IMG_HISTORY,
+      size: "full",
+      aspectRatio: "16:9",
+      aspectMode: "cover",
+      backgroundColor: "#eeeeee"
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      justifyContent: "center",
+      alignItems: "center",
+      contents: [
+        {
+          type: "text",
+          text: "ดูเพิ่มเติม",
+          weight: "bold",
+          size: "xl",
+          color: "#333333"
+        },
+        {
+          type: "button",
+          style: "link",
+          height: "sm",
+          action: {
+            type: "uri",
+            label: "See More",
+            uri: "https://streeflood.vercel.app/" // Replace with actual link
+          }
+        }
+      ]
+    }
   });
 
   return { type: "flex", altText: "ระดับน้ำในอดีต", contents: { type: "carousel", contents: bubbles } };
