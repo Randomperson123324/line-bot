@@ -140,7 +140,7 @@ function createCurrentLevelFlex(data) {
       type: "image",
       url: bgImage,
       size: "full",
-      aspectRatio: "20:13",
+      aspectRatio: "16:9",
       aspectMode: "cover",
       action: { type: "uri", uri: "http://linecorp.com/" }
     },
@@ -267,7 +267,7 @@ function createHistoryFlex(data) {
         type: "image",
         url: IMG_HISTORY,
         size: "full",
-        aspectRatio: "20:13",
+        aspectRatio: "16:9",
         aspectMode: "cover"
       },
       body: {
@@ -298,7 +298,7 @@ function createFloodFlex(data) {
         type: "image",
         url: IMG_FLOOD,
         size: "full",
-        aspectRatio: "20:13",
+        aspectRatio: "16:9",
         aspectMode: "cover"
       },
       body: {
