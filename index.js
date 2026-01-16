@@ -143,7 +143,7 @@ function createCurrentLevelFlex(data) {
       size: "full",
       aspectRatio: "16:9",
       aspectMode: "cover",
-      action: { type: "uri", uri: "http://linecorp.com/" }
+      action: { type: "uri", uri: "https://streeflood.vercel.app/" }
     },
     body: {
       type: "box",
@@ -347,7 +347,7 @@ function createFloodFlex(data) {
           action: {
             type: "uri",
             label: "See More",
-            uri: "https://google.com" // Replace with actual link
+            uri: "https://streeflood.vercel.app/" // Replace with actual link
           }
         }
       ]
