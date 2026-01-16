@@ -93,7 +93,8 @@ async function fetchFloodReports(hours) {
     .from("flood_reports")
     .select("area_name, severity, description, created_at")
     .gte("created_at", past.toISOString())
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(9);
 
   if (error || !data) return [];
   return data;
@@ -298,7 +299,7 @@ function createFloodFlex(data) {
         type: "image",
         url: IMG_FLOOD,
         size: "full",
-        aspectRatio: "16:9",
+        aspectRatio: "20:13",
         aspectMode: "cover"
       },
       body: {
@@ -313,6 +314,44 @@ function createFloodFlex(data) {
         ]
       }
     };
+  });
+
+  // Add "See More" bubble
+  bubbles.push({
+    type: "bubble",
+    hero: {
+      type: "image",
+      url: IMG_FLOOD,
+      size: "full",
+      aspectRatio: "20:13",
+      aspectMode: "cover",
+      backgroundColor: "#eeeeee"
+    },
+    body: {
+      type: "box",
+      layout: "vertical",
+      justifyContent: "center",
+      alignItems: "center",
+      contents: [
+        {
+          type: "text",
+          text: "ดูเพิ่มเติม",
+          weight: "bold",
+          size: "xl",
+          color: "#333333"
+        },
+        {
+          type: "button",
+          style: "link",
+          height: "sm",
+          action: {
+            type: "uri",
+            label: "See More",
+            uri: "https://google.com" // Replace with actual link
+          }
+        }
+      ]
+    }
   });
 
   return { type: "flex", altText: "รายงานน้ำท่วม", contents: { type: "carousel", contents: bubbles } };
