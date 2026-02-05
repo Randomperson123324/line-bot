@@ -17,8 +17,8 @@ const supabase = createClient(
 );
 
 // Constants
-const LEVEL_WARNING = 20;
-const LEVEL_DANGER = 40;
+const LEVEL_WARNING = 5;
+const LEVEL_DANGER = 10;
 
 // Image Assets (GitHub Host)
 const GITHUB_IMAGE_BASE = "https://raw.githubusercontent.com/Randomperson123324/line-bot/main/public/";
